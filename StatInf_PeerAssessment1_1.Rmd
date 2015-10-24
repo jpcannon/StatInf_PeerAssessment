@@ -1,0 +1,158 @@
+---
+title: "Statistical Inference Peer Assessment Part 1 of 2"
+author: "Joe Cannon"
+date: "October 19, 2015"
+output: html_document
+---
+
+
+
+```{r global_options, include=FALSE}
+suppressWarnings(suppressMessages(library(knitr)))
+```
+
+#Statistical Inference Course Project 1
+
+##Overview
+In this project we will investigate the exponential dist in R and compare it with the Central Limit Theorem. The exponential dist can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential dist is 1/lambda and the standard deviation is also 1/lambda. 
+
+1. Show the sample mean and compare it to the theoretical mean of the dist.
+
+2. Show how variable the sample is (via variance) and compare it to the theoretical variance of the dist.
+
+3. Show that the dist is approximately normal.
+
+Note: I used the class slides to learn how to write cool looking math formulas in rMarkdown. So sending props to the instructor.
+
+##Simulations
+
+*Set lambda = 0.2 for all of the simulations
+
+*Generate 40 exponentials  1000 times 
+
+*Calculate the mean, variance, Std. for both simulations and theoretical
+
+*Compare
+
+
+```{r}
+# load neccesary libraries
+suppressWarnings(suppressMessages(library(ggplot2)))
+
+```
+
+
+
+
+```{r set constants per problem def}
+
+lambda <- .2 # definded setting of lambda
+n <- 40  # number of exponentials  
+nsims <- 1000 # number of tests
+set.seed(1961) # For repeatablility. A great year
+```
+
+Generate `r nsims` of `r n ` exponential distributions, and calculate the mean of each.
+```{r}
+xdists <- matrix(rexp(n * nsims, lambda), nrow=nsims,ncol=n)
+xdist_mean <- data.frame(mean=apply(xdists, 1, mean))
+
+```
+
+
+## Sample Mean vs. Theoretical Mean
+
+
+```{r}
+tm <- 1/lambda
+```
+
+The theroretical mean is  ${1/\lambda}  =  {1/`r lambda`}  =  `r tm`$
+
+
+```{r}
+xdist_mean_mean <- mean(xdist_mean$mean)
+```
+
+Expected mean is `r tm `
+
+Average sample mean is `r xdist_mean_mean`
+
+Observed:
+They are very close as you can see from the vertical lines on the attached desity plot
+
+```{r fig.width=10, fig.height=5}
+
+ggplot(xdist_mean, aes(x = mean)) + 
+  geom_histogram(binwidth=0.1,fill="light green", colour="black")+
+  geom_vline(aes(xintercept = xdist_mean_mean, colour="SampMean"),show_guide=TRUE) +
+  geom_vline(aes(xintercept = tm, colour="ExpMean"), show_guide=TRUE)+
+  scale_colour_manual(name="Means", values=c(ExpMean="blue",SampMean="red"))+
+   scale_linetype_manual(name="Means", values=c(ExpMean="solid",SampMean="solid"), guide=FALSE)
+```
+
+## Sample Variance vs. Theoretical Variance
+
+The expected standard deviation $\sigma$ of a exponential dist of rate $\lambda$ is 
+
+```{r}
+sd <- 1/lambda/sqrt(n)
+```
+
+$\sigma = \frac{1/\lambda}{\sqrt{n}}  =  \frac{1/`r lambda`}{\sqrt{`r n`}}  =  `r sd`$
+
+```{r}
+var <- sd^2
+```
+
+The expected variance $Var$ of standard deviation $\sigma$ is 
+$Var = \sigma^2  =  `r sd`^2  =  `r var`$
+
+```{r}
+sdx_mean<- sd(xdist_mean$mean)
+
+
+varx_mean <- var(xdist_mean$mean)
+
+```
+
+Variance of the average sample mean of 1000 simulations of 40 randomly sampled exponential distribution.
+ 
+$\bar{Var_x}  =  `r varx_mean`$
+
+Corresponding standard deviation.
+
+$\bar{\sigma_x}  =  `r sdx_mean`$
+
+
+Observation: 
+As you can see, they are fairly close.
+
+
+##Distribution
+
+Comparing the population means & standard deviation with a normal dist of the expected values. Added lines for the calculated and expected means
+
+```{r fig.width=10, fig.height=5}
+ggplot(xdist_mean, aes(x = mean)) + 
+  geom_histogram(binwidth=0.1, aes(y=..density..), alpha=0.2,fill="light yellow", colour="black")+
+  stat_function(fun = dnorm, 
+                arg = list(mean = tm , sd = sd), 
+                colour = "red", size=1.5) + 
+  geom_density(colour="black", size=1.5) +
+  geom_vline(aes(xintercept = xdist_mean_mean, colour="SampMean"),show_guide=TRUE) +
+  geom_vline(aes(xintercept = tm, colour="ExpMean"), show_guide=TRUE)+
+  scale_colour_manual(name="Means", values=c(ExpMean="blue",SampMean="red"))+
+  scale_linetype_manual(name="Means", values=c(ExpMean="solid",SampMean="solid"), guide=FALSE)
+
+```
+The red curve shows the Normal Distribution 
+
+The blue curve shows a smooth density estimate from the sample
+
+The red vertical   line shows the exp distribution mean of means
+
+The blue vertical   line shows the expected mean based on `r lambda` lambda
+
+As you can see from the graph, the distribution of means of the sampled exp distribution has a strong fit with the normal distribution of expected mean values. As the value lambda increase, the desity will move closer to the center, and lambda becomes smaller we would expect the density to spread out more, but the corralation should remain consistant.
+

@@ -1,0 +1,128 @@
+---
+title: "Statisitical Inference Peer Assesment Part 1 of 2"
+author: "Joe Cannon"
+date: "October 19, 2015"
+output: html_document
+---
+
+
+
+```{r global_options, include=FALSE}
+suppressWarnings(suppressMessages(library(knitr)))
+```
+
+#Statistical Inference Course Project 1
+
+##Overview
+In this project we will investigate the exponential distribution in R and compare it with the Central Limit Theorem. The exponential distribution can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential distribution is 1/lambda and the standard deviation is also 1/lambda. 
+
+1. Show the sample mean and compare it to the theoretical mean of the distribution.
+
+2. Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.
+
+3. Show that the distribution is approximately normal.
+
+##Simulations
+We set 
+lambda = 0.2 for all of the simulations
+We will investigate the distribution of averages of 40 exponentials. 
+We wil be that you will be conducting 1,000 simulations.
+
+Illustrate via simulation and associated explanatory text the properties of the distribution of the mean of 40 exponentials.  You should
+
+
+## Simulations
+
+```{r}
+# load neccesary libraries
+suppressWarnings(suppressMessages(library(ggplot2)))
+```
+
+```{r set constants}
+
+lambda <- 0.2 
+n <- 40 
+nsimulations <- 1000 # number of tests
+
+set.seed(1961)
+
+xdistributions <- matrix(data=rexp(n * nsimulations, lambda), nrow=nsimulations)
+xdistribution_mean <- data.frame(means=apply(xdistributions, 1, mean))
+```
+
+```{r }
+ggplot(data = xdistribution_mean, aes(x = means)) + 
+  geom_histogram(binwidth=0.1) +   
+  scale_x_continuous(breaks=round(seq(min(xdistribution_mean$means), max(xdistribution_mean$means))))
+```
+
+## Sample Mean versus Theoretical Mean
+
+The expected mean $\mu$ of a exponential distribution of rate $\lambda$ is 
+
+The theroretical mean is 1/ lambda
+
+```{r}
+tm <- 1/lambda
+```
+
+Let $\bar X$ be the average sample mean of 1000 simulations of 40 randomly sampled exponential distributions.
+
+```{r}
+xdistribution_mean_mean <- mean(xdistribution_mean$means)
+xdistribution_mean_mean
+```
+
+Expected mean is `r tm `
+Average sample mean is `r xdistribution_mean_mean`
+
+
+
+## Sample Variance versus Theoretical Variance
+
+The expected standard deviation $\sigma$ of a exponential distribution of rate $\lambda$ is 
+
+$\sigma = \frac{1/\lambda}{\sqrt{n}}$ 
+
+The e
+
+```{r}
+sd <- 1/lambda/sqrt(n)
+sd
+```
+
+The variance $Var$ of standard deviation $\sigma$ is
+
+$Var = \sigma^2$ 
+
+```{r}
+Var <- sd^2
+Var
+```
+
+Let $Var_x$ be the variance of the average sample mean of 1000 simulations of 40 randomly sampled exponential distribution, and $\sigma_x$ the corresponding standard deviation.
+```{r}
+sd_x <- sd(xdistribution_mean$means)
+sd_x
+
+Var_x <- var(xdistribution_mean$means)
+Var_x
+```
+
+As you can see the standard deviations are very close
+Since variance is the square of the standard deviations, minor differnces will we enhanced, but are still pretty close.
+
+## Distribution
+
+Comparing the population means & standard deviation with a normal distribution of the expected values. Added lines for the calculated and expected means
+
+```{r }
+ggplot(data = xdistribution_mean, aes(x = means)) + 
+  geom_histogram(binwidth=0.1, aes(y=..density..), alpha=0.2,fill="light green",colour="black") + 
+  stat_function(fun = dnorm, arg = list(mean = tm , sd = sd), colour = "red", size=1) + 
+  geom_vline(xintercept = tm, size=1.5, colour="red") + 
+  geom_density(colour="blue", size=1.5) +
+  geom_vline(xintercept = xdistribution_mean_mean, colour="black")  
+```
+
+As you can see from the graph, the calculated distribution of means of random sampled exponantial distributions, overlaps quite nice with the normal distribution with the expected values based on the given lamba

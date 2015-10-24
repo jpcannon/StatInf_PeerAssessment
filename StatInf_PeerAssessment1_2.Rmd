@@ -1,0 +1,105 @@
+---
+title: "Statistical Inference Peer Assessment Part 2 of 2"
+author: "Joe Cannon"
+date: "October 19, 2015"
+output: html_document
+---
+
+```{r  echo=FALSE}
+suppressWarnings(suppressMessages(library(knitr)))
+```
+
+# Statistical Inference Course Project 2
+
+## Overview
+Dataset:
+The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+
+This part of the project I will
+- Load the ToothGrowth data and perform some basic exploratory data analyses 
+- Provide a basic summary of the data.
+- Used confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. 
+- State my conclusions and the assumptions needed for your conclusions. 
+
+
+#### Load libraries
+```{r echo=FALSE}
+suppressWarnings(suppressMessages(library(ggplot2)))
+suppressWarnings(suppressMessages(library(datasets)))
+suppressWarnings(suppressMessages(library(gridExtra)))
+suppressWarnings(suppressMessages(library(grid)))
+suppressWarnings(suppressMessages(library(gtable)))
+```
+
+###1.) Load ToothGrowth data
+```{r LoadData} 
+data(ToothGrowth)
+toothGrowth <- ToothGrowth 
+toothGrowth$dose <- as.numeric(toothGrowth$dose) # convert to factor
+toothGrowth$len <- as.numeric(toothGrowth$len)
+```
+
+
+###2.) Basic Summary of the data
+```{r}
+str(toothGrowth)
+summary(toothGrowth)
+head(toothGrowth)
+ATG <- aggregate(len~dose+supp,toothGrowth,mean)
+grid.table(ATG)
+```
+
+
+```{r BasicSummary}
+ggplot(ATG, aes(x=dose,y=len,colour=supp),size=2) +
+  geom_line() 
+```
+
+###3.) Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering)
+
+```{r CalcConfInt}
+test1 <- t.test(len~supp, paired=F, var.equal=T, data=ToothGrowth)
+test2 <- t.test(len~supp, paired=F, var.equal=F, data=ToothGrowth)
+test3 <- t.test(len~supp, paired=T,  data=ToothGrowth)
+
+result <- data.frame("Conf"=c(attr(test1$conf,"conf.level"),attr(test2$conf,"conf.level"),
+                              attr(test3$conf,"conf.level")),
+                     "p-value"=c(test1$p.value, test2$p.value,test3$p.value),
+                     "Conf-Low"=c(test1$conf[1],test2$conf[1],test3$conf[1]),
+                     "Conf-High"=c(test1$conf[2],test2$conf[2],test3$conf[2]),
+                      row.names=c("Unpaired Equal Var","Unpaired Unequal Var",
+                                  "Paired Var"))
+  
+  mytheme <- gridExtra::ttheme_default(
+      core = list(fg_params=list(cex = .8)),
+      colhead = list(fg_params=list(cex = .7)),
+      rowhead = list(fg_params=list(cex = .7)))
+  
+  table <- gridExtra::tableGrob(result, theme = mytheme)
+  title <- textGrob("T Confidence Tests",gp=gpar(fontsize=20))
+  footnote <- textGrob("", x=0, hjust=0,
+                       gp=gpar( fontface="italic"))
+  padding <- unit(1,"line")
+  table <- gtable_add_rows(table, 
+                           heights = grobHeight(title) + padding,
+                           pos = 0)
+  table <- gtable_add_rows(table, 
+                           heights = grobHeight(footnote)+ padding)
+  table <- gtable_add_grob(table, list(title, footnote),
+                           t=c(1, nrow(table)), l=c(1,2), 
+                           r=ncol(table))
+  grid.newpage()
+  grid.draw(table)
+```
+
+We did not need to do a 4th test, because if the samples are paired, the Equal and Unequal var will be the same.
+
+###4.) State your conclusions and the assumptions needed for your conclusions.
+
+Based on the data provided, it can be stated that both VC, and OJ have beneficial results with regards to tooth length. However at smaller doses Orange Juice seems to have a greater impact than Vitamin C. This difference diminishes as doses increase.
+
+Assumptions:
+*Guinea pigs have similar tooth reaction to Orange Juice and Vitamin C as humans
+*60 is a large enough sample size 
+
+
