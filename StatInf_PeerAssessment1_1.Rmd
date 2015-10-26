@@ -11,7 +11,7 @@ output: html_document
 suppressWarnings(suppressMessages(library(knitr)))
 ```
 
-#Statistical Inference Course Project 1
+##Comparing Sample Exponential Distribute with Theoretical from the Central Limit Theorem
 
 ##Overview
 In this project we will investigate the exponential dist in R and compare it with the Central Limit Theorem. The exponential dist can be simulated in R with rexp(n, lambda) where lambda is the rate parameter. The mean of exponential dist is 1/lambda and the standard deviation is also 1/lambda. 
@@ -22,11 +22,9 @@ In this project we will investigate the exponential dist in R and compare it wit
 
 3. Show that the dist is approximately normal.
 
-Note: I used the class slides to learn how to write cool looking math formulas in rMarkdown. So sending props to the instructor.
-
 ##Simulations
 
-*Set lambda = 0.2 for all of the simulations
+*Set lambda ($lambda$) = 0.2 for all of the simulations
 
 *Generate 40 exponentials  1000 times 
 
@@ -45,18 +43,20 @@ suppressWarnings(suppressMessages(library(ggplot2)))
 
 
 ```{r set constants per problem def}
-
 lambda <- .2 # definded setting of lambda
 n <- 40  # number of exponentials  
 nsims <- 1000 # number of tests
-set.seed(1961) # For repeatablility. A great year
+set.seed(1961) # For repeatablility. 
 ```
 
 Generate `r nsims` of `r n ` exponential distributions, and calculate the mean of each.
-```{r}
+```{r expdist}
 xdists <- matrix(rexp(n * nsims, lambda), nrow=nsims,ncol=n)
-xdist_mean <- data.frame(mean=apply(xdists, 1, mean))
+```
 
+```{r meanexpdist}
+xdist_mean <- data.frame(mean=apply(xdists, 1, mean))
+summary(xdist_mean)
 ```
 
 
@@ -69,7 +69,7 @@ tm <- 1/lambda
 
 The theroretical mean is  ${1/\lambda}  =  {1/`r lambda`}  =  `r tm`$
 
-
+Calculate the mean of means.
 ```{r}
 xdist_mean_mean <- mean(xdist_mean$mean)
 ```
@@ -79,7 +79,7 @@ Expected mean is `r tm `
 Average sample mean is `r xdist_mean_mean`
 
 Observed:
-They are very close as you can see from the vertical lines on the attached desity plot
+They are very close as you can see from the vertical lines on the attached desity plot of sample means
 
 ```{r fig.width=10, fig.height=5}
 
@@ -126,7 +126,7 @@ $\bar{\sigma_x}  =  `r sdx_mean`$
 
 
 Observation: 
-As you can see, they are fairly close.
+As you can see, the variances are fairly close, and the standard deviations ar very close.
 
 
 ##Distribution
@@ -146,13 +146,17 @@ ggplot(xdist_mean, aes(x = mean)) +
   scale_linetype_manual(name="Means", values=c(ExpMean="solid",SampMean="solid"), guide=FALSE)
 
 ```
-The red curve shows the Normal Distribution 
+The red curve shows the Normal Distribution based on the Theroretical mean and standard deviation.
 
-The blue curve shows a smooth density estimate from the sample
+The blue curve shows a smooth density estimate from the sample. 
 
-The red vertical   line shows the exp distribution mean of means
+The red vertical line shows the exp distribution mean of means.
 
-The blue vertical   line shows the expected mean based on `r lambda` lambda
+The blue vertical line shows the expected mean based on `r lambda` lambda
 
-As you can see from the graph, the distribution of means of the sampled exp distribution has a strong fit with the normal distribution of expected mean values. As the value lambda increase, the desity will move closer to the center, and lambda becomes smaller we would expect the density to spread out more, but the corralation should remain consistant.
+  As you can see from the graph, the distribution of means of the sampled exp distribution has a strong fit with the normal distribution of expected mean values, and center on the mean.  
+
+ As the value lambda increase, the desity will move closer to the center, and lambda becomes smaller we would expect the density to spread out more, but the corralation should remain consistant.
+
+
 

@@ -9,9 +9,9 @@ output: html_document
 suppressWarnings(suppressMessages(library(knitr)))
 ```
 
-# Statistical Inference Course Project 2
+## Effect of different Viamin C delivery methods in guinea pig tooth growth
 
-## Overview
+### Overview
 Dataset:
 The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid (a form of vitamin C and coded as VC).
 
@@ -29,9 +29,10 @@ suppressWarnings(suppressMessages(library(datasets)))
 suppressWarnings(suppressMessages(library(gridExtra)))
 suppressWarnings(suppressMessages(library(grid)))
 suppressWarnings(suppressMessages(library(gtable)))
+
 ```
 
-###1.) Load ToothGrowth data
+####1.) Load ToothGrowth data
 ```{r LoadData} 
 data(ToothGrowth)
 toothGrowth <- ToothGrowth 
@@ -40,66 +41,109 @@ toothGrowth$len <- as.numeric(toothGrowth$len)
 ```
 
 
-###2.) Basic Summary of the data
-```{r}
+####2.) Basic Summary of the data
+```{r, fig.Height= 6, fig.Width =10}
 str(toothGrowth)
 summary(toothGrowth)
 head(toothGrowth)
-ATG <- aggregate(len~dose+supp,toothGrowth,mean)
-grid.table(ATG)
 ```
 
+Create and average length for each dose, and suppliment
+```{r average ,fig.width=10, fig.height=5}
+ATG <- aggregate(len~dose+supp,toothGrowth,mean)
+
+  mytheme <- gridExtra::ttheme_default(
+      core = list(fg_params=list(cex = 1.3)),
+      colhead = list(fg_params=list(cex = 1.5)),
+      rowhead = list(fg_params=list(cex = .5)))
+  
+  table <- gridExtra::tableGrob(ATG, theme = mytheme,rows = NULL)
+  title <- textGrob("Supliment Dose/Tooth Growth",gp=gpar(fontsize=10,fontface="bold"))
+
+  footnote <- textGrob(date() , x=0, hjust=0,
+                       gp=gpar( fontface="italic",fontsize=5),just = 0)
+  padding <- unit(.5,"line")
+  table <- gtable_add_rows(table, 
+                           heights = grobHeight(title) + padding,
+                           pos = 0)
+  table <- gtable_add_rows(table, 
+                           heights = grobHeight(footnote)+padding)
+
+  
+  table <- gtable_add_grob(table, list(title,footnote),
+                           t=c(1, nrow(table)), l=c(1,2), 
+                           r=ncol(table))
+
+
+  grid.newpage()
+  grid.draw(table)
+```
+
+This is the result of the average tooth growth based on dose of supp.
 
 ```{r BasicSummary}
 ggplot(ATG, aes(x=dose,y=len,colour=supp),size=2) +
-  geom_line() 
+    geom_line() +
+    ggtitle("Tooth length by dose of Supliment")+
+    xlab("Dose")+
+    ylab("Average Tooth Length")      
 ```
 
 ###3.) Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose. (Only use the techniques from class, even if there's other approaches worth considering)
 
 ```{r CalcConfInt}
-test1 <- t.test(len~supp, paired=F, var.equal=T, data=ToothGrowth)
-test2 <- t.test(len~supp, paired=F, var.equal=F, data=ToothGrowth)
-test3 <- t.test(len~supp, paired=T,  data=ToothGrowth)
+test1 <- t.test(len~supp, paired=F, var.equal=T, data=ToothGrowth[which(ToothGrowth$dose==.5),])
+test2 <- t.test(len~supp, paired=F, var.equal=F, data=ToothGrowth[which(ToothGrowth$dose==.5),])
 
-result <- data.frame("Conf"=c(attr(test1$conf,"conf.level"),attr(test2$conf,"conf.level"),
-                              attr(test3$conf,"conf.level")),
-                     "p-value"=c(test1$p.value, test2$p.value,test3$p.value),
-                     "Conf-Low"=c(test1$conf[1],test2$conf[1],test3$conf[1]),
-                     "Conf-High"=c(test1$conf[2],test2$conf[2],test3$conf[2]),
-                      row.names=c("Unpaired Equal Var","Unpaired Unequal Var",
-                                  "Paired Var"))
-  
+
+result <- data.frame("conf"=c(attr(test1$conf,"conf.level"),attr(test2$conf,"conf.level")),
+                     "p_value"=c(test1$p.value, test2$p.value),
+                     "conf_low"=c(test1$conf[1],test2$conf[1]),
+                     "conf_high"=c(test1$conf[2],test2$conf[2]),
+                      row.names=c("Equal Var","Unequal Var"))
+plow <- min(result$p_value)
+phigh <- max(result$p_value) 
+
+```
+
+
+```{r plot_ttest results}
   mytheme <- gridExtra::ttheme_default(
       core = list(fg_params=list(cex = .8)),
-      colhead = list(fg_params=list(cex = .7)),
-      rowhead = list(fg_params=list(cex = .7)))
+      colhead = list(fg_params=list(cex = .8)),
+      rowhead = list(fg_params=list(cex = .8)))
   
   table <- gridExtra::tableGrob(result, theme = mytheme)
   title <- textGrob("T Confidence Tests",gp=gpar(fontsize=20))
-  footnote <- textGrob("", x=0, hjust=0,
-                       gp=gpar( fontface="italic"))
+
+  footnote <- textGrob("Paired does not make sense in this test as the guinea pigs are supposedly different. ", x=0, hjust=0,
+                       gp=gpar( fontface="italic",fontsize=8))
   padding <- unit(1,"line")
   table <- gtable_add_rows(table, 
                            heights = grobHeight(title) + padding,
                            pos = 0)
   table <- gtable_add_rows(table, 
-                           heights = grobHeight(footnote)+ padding)
-  table <- gtable_add_grob(table, list(title, footnote),
+                           heights = grobHeight(footnote)+padding)
+  
+  table <- gtable_add_grob(table, list(title,footnote),
                            t=c(1, nrow(table)), l=c(1,2), 
                            r=ncol(table))
+
   grid.newpage()
   grid.draw(table)
 ```
 
-We did not need to do a 4th test, because if the samples are paired, the Equal and Unequal var will be the same.
 
-###4.) State your conclusions and the assumptions needed for your conclusions.
 
-Based on the data provided, it can be stated that both VC, and OJ have beneficial results with regards to tooth length. However at smaller doses Orange Juice seems to have a greater impact than Vitamin C. This difference diminishes as doses increase.
+####4.) State your conclusions and the assumptions needed for your conclusions.
+
+###Conclusion
+Based on the data provided, it can be stated that both VC, and OJ have beneficial results with regards to tooth length in guinea pigs with a p-Value of `r plow` to `r phigh`. However at smaller doses Orange Juice seems to have a greater impact than  ascorbic acid. The difference in the delivery methods diminishes to 0 as doses increase. This is a blended test of all doses. 
 
 Assumptions:
-*Guinea pigs have similar tooth reaction to Orange Juice and Vitamin C as humans
+*There is a coorilation of  tooth length in guinea pigs to vitamin C 
+*This is a random sample of guinea pigs
 *60 is a large enough sample size 
+
 
 
